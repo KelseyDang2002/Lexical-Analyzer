@@ -1,8 +1,9 @@
-# only used for last message 
+# Used to exit program gracefully 
 import time
+import sys
 
 # define separators, operators and reserved words
-separator = [' ', '\n', '\t', ',', ';', '(', ')', '{', '}', '#', ':']
+separator = [' ', '\n', '\t', ',', ';', '(', ')', '{', '}', '#']
 operators = ['+', '-', '*', '/', '=', '<', '>', '<=', '>=', '==', '!=']
 keyword = ['if', 'else', 'endif' ,'while', 'function', 'integer', 'bool', 'real', 'ret', 'put', 'get', 'true', 'false']
 begin_comment = '[*'
@@ -94,13 +95,14 @@ def FSMReal(lexeme):
     current_state = 1
     for char in lexeme:
         # manage initial state
+        # we need this because we can't have a "." as the first character
         if current_state == 1:
             if char.isdigit():
                 current_state = 2
             else:
                 current_state = 5
         # manage state 2 aka integer before "."
-        elif current_state == 2:
+        if current_state == 2:
             if char.isdigit():
                 current_state = 2
             elif char == '.':
@@ -139,25 +141,33 @@ def FSMIdentifier(identifier):
             tokens.append({'token': 'identifier', 'lexeme': identifier})
     else:
         for char in identifier:
+            # check if the first character is a letter
             if current_state == 1:
                 if char.isalpha():
                     current_state = 2
                 else:
                     current_state = 4
+            # now we can accept digits and letters
             elif current_state == 2:
                 if char.isalpha():
+                    # we stay in the same state if letter
                     current_state = 2
                 elif char.isdigit():
+                    # we move to state 3 if digit
                     current_state = 3
                 else:
                     current_state = 4
+            # still accepting digits and letters
             elif current_state == 3:
                 if char.isalpha():
+                    # we go back to state 2 if letter
                     current_state = 2
                 elif char.isdigit():
+                    # we stay in the same state if digit
                     current_state = 3
                 else:
                     current_state = 4
+        # final state must be 2 because we need to end in a letter
         if current_state == 2:
             tokens.append({'token': 'identifier', 'lexeme': identifier})
         else:
@@ -239,7 +249,7 @@ def analyze_file():
                 print("\nThank you for using our Lexical Analyzer!\n")
                 print("Exiting program...")
                 time.sleep(2)
-                exit(0) # Exit the loop and quit the program
+                sys.exit(0) # Exit the loop and quit the program
             with open(file_name, 'r') as file:
                 # The file exists, so continue with analysis
                 print(f"\nAnalyzing file '{file_name}'...\n")
@@ -269,8 +279,8 @@ while True:
         print("\nThank you for using our Lexical Analyzer!\n")
         print("Exiting program...")
         time.sleep(2)
-        exit(0)  # Exit the program if the user does not want to analyze another file
-    if another_analysis != 'yes' or another_analysis != 'y':
+        sys.exit(0)  # Exit the program if the user does not want to analyze another file
+    elif another_analysis == 'yes' or another_analysis == 'y':
         analyze_file()
     else:
         print("Invalid input. Please enter 'yes' or 'no'.")
